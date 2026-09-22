@@ -5,7 +5,7 @@
 ```text
 FakeMes.Simulator（假数采）
         ↓ HTTP
-FakeMes.Api（.NET + SQLite）
+FakeMes.Api（.NET + SQL Server LocalDB）
         ↑
 FakeMes.Web（Vue 追溯页）
 ```
@@ -14,6 +14,7 @@ FakeMes.Web（Vue 追溯页）
 
 - .NET 10 SDK（本机已验证）
 - Node.js 16+（前端用 Vite 4）
+- SQL Server LocalDB（本机已有 `MSSQLLocalDB`；连接串在 `src/FakeMes.Api/appsettings.json`）
 
 ## 启动顺序（三个终端）
 
@@ -24,7 +25,7 @@ cd src/FakeMes.Api
 dotnet run --launch-profile http
 ```
 
-默认地址：`http://localhost:5251`
+默认地址：`http://localhost:5251`（自动跳转到 Swagger；新增 Controller 会自动出现）
 
 ### 2. 模拟数采
 
@@ -66,7 +67,27 @@ npm run dev
 1. 条码空 → 拒绝  
 2. 同工位已进站未出站 → 拒绝再进站  
 3. 未进站 → 拒绝出站  
-4. 成功则写入 SQLite（`src/FakeMes.Api/fakemes.db`）
+4. 成功则写入 SQL Server（库名 `FakeMes`，首次启动自动建库表）
+
+## 数据维护（正式 MES 风格）
+
+热库 `TrackRecords` 只保留近期数据；超过保留期的记录归档到 `TrackRecordArchives`（追溯仍可查）。
+
+配置见 `src/FakeMes.Api/appsettings.json` → `Maintenance`：
+
+| 项 | 含义 | 默认 |
+|----|------|------|
+| RetentionDays | 热库保留天数 | 90 |
+| IntervalHours | 定时归档间隔（小时） | 24 |
+| Enabled | 是否启用后台定时任务 | true |
+| BatchSize | 单次归档批大小 | 1000 |
+
+Swagger「维护」分组：
+
+- `GET /api/maintenance/status` 查看热库/归档数量与上次执行
+- `POST /api/maintenance/archive` 立刻执行一次归档
+
+练习时可把 `RetentionDays` 临时改成 `0` 或 `1` 再点归档，观察数据从 `TrackRecords` 挪到 `TrackRecordArchives`。
 
 ## 建议你接着改
 

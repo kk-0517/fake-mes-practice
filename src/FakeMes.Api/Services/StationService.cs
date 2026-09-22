@@ -68,16 +68,29 @@ public class StationService(AppDbContext db)
         if (string.IsNullOrWhiteSpace(barcode))
             return [];
 
-        return await db.TrackRecords
+        var hot = await db.TrackRecords
             .AsNoTracking()
             .Where(x => x.Barcode == barcode)
-            .OrderBy(x => x.Time)
             .Select(x => new TraceItemDto(
                 x.Type == TrackType.In ? "In" : "Out",
                 x.StationCode,
                 x.Barcode,
                 x.Time))
             .ToListAsync(ct);
+
+        var cold = await db.TrackRecordArchives
+            .AsNoTracking()
+            .Where(x => x.Barcode == barcode)
+            .Select(x => new TraceItemDto(
+                x.Type == TrackType.In ? "In" : "Out",
+                x.StationCode,
+                x.Barcode,
+                x.Time))
+            .ToListAsync(ct);
+
+        return hot.Concat(cold)
+            .OrderBy(x => x.Time)
+            .ToList();
     }
 
     public async Task<IReadOnlyList<StationDto>> GetStationsAsync(CancellationToken ct = default)

@@ -6,6 +6,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     public DbSet<Station> Stations => Set<Station>();
     public DbSet<TrackRecord> TrackRecords => Set<TrackRecord>();
+    public DbSet<TrackRecordArchive> TrackRecordArchives => Set<TrackRecordArchive>();
+    public DbSet<MaintenanceLog> MaintenanceLogs => Set<MaintenanceLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,6 +23,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.StationCode).HasMaxLength(32);
             e.Property(x => x.Barcode).HasMaxLength(64);
             e.HasIndex(x => new { x.Barcode, x.Time });
+            e.HasIndex(x => x.Time);
+        });
+
+        modelBuilder.Entity<TrackRecordArchive>(e =>
+        {
+            e.Property(x => x.StationCode).HasMaxLength(32);
+            e.Property(x => x.Barcode).HasMaxLength(64);
+            e.HasIndex(x => new { x.Barcode, x.Time });
+            e.HasIndex(x => x.ArchivedAt);
+        });
+
+        modelBuilder.Entity<MaintenanceLog>(e =>
+        {
+            e.Property(x => x.Trigger).HasMaxLength(32);
+            e.Property(x => x.Message).HasMaxLength(512);
         });
     }
 }
