@@ -3,4 +3,7 @@
     <Project Path="src/FakeMes.Api/FakeMes.Api.csproj" />
     <Project Path="src/FakeMes.Simulator/FakeMes.Simulator.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FakeMes.Api.Tests/FakeMes.Api.Tests.csproj" />
+  </Folder>
 </Solution>

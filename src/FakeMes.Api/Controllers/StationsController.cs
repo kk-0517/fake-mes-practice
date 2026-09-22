@@ -13,4 +13,16 @@ public class StationsController(StationService stationService) : ControllerBase
     [EndpointSummary("工位列表")]
     public Task<IReadOnlyList<StationDto>> Get(CancellationToken ct)
         => stationService.GetStationsAsync(ct);
+
+    [HttpPost]
+    [EndpointSummary("新增工位")]
+    public async Task<ActionResult<CreateStationResponse>> Create(
+        [FromBody] CreateStationRequest request,
+        CancellationToken ct)
+    {
+        var result = await stationService.CreateStationAsync(request, ct);
+        if (!result.Ok)
+            return BadRequest(result);
+        return Ok(result);
+    }
 }

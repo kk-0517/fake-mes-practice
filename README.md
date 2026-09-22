@@ -3,7 +3,7 @@
 无真实 PLC/设备的 **进站 → 出站 → 网页追溯** 练手项目。
 
 ```text
-FakeMes.Simulator（假数采）
+FakeMes.Simulator（假 PLC + 假数采握手）
         ↓ HTTP
 FakeMes.Api（.NET + SQL Server LocalDB）
         ↑
@@ -34,7 +34,27 @@ cd src/FakeMes.Simulator
 dotnet run
 ```
 
-会每隔几秒自动：`track-in` → 等待加工 → `track-out`，控制台打印条码与 Allow/拒绝。
+会先选工位（模拟工位机绑设备），然后按现场握手跑：
+
+```text
+假PLC OnlineRequest → 数采调 track-in → AllowOnline/NotAllowOnline
+假PLC DownlineRequest → 数采调 track-out → AllowDownline/NotAllowDownline
+```
+
+控制台会分别打印 `[PLC ]` 与 `[数采]` 日志。启动时可先选工位，再选剧本：
+
+| 剧本 | 期望 |
+|------|------|
+| 1 正常循环 | AllowOnline → AllowDownline |
+| 2 空条码 | NotAllowOnline「条码为空」 |
+| 3 重复进站 | 第二次 NotAllowOnline「已在站内」 |
+| 4 未进站出站 | NotAllowDownline「未进站」 |
+| 5 全演示 | 2+3+4 各跑一遍 |
+
+`CpuIp` 在 `appsettings.json` 里，仅作现场设备 IP 的占位说明。
+
+详见 [docs/flow.md](docs/flow.md)。  
+对照公司联调手册：[docs/manual-mapping.md](docs/manual-mapping.md)（六层 / 六拍勾选表）。
 
 ### 3. 前端
 
@@ -54,7 +74,9 @@ npm run dev
 | POST | `/api/daq/track-in` | 进站 |
 | POST | `/api/daq/track-out` | 出站 |
 | GET | `/api/stations` | 工位列表 |
+| POST | `/api/stations` | 新增工位 `{ "code","name" }` |
 | GET | `/api/trace?barcode=SNxxxx` | 条码追溯 |
+| GET | `/api/dashboard?recent=10` | 今日进站数 + 最近 N 条 |
 
 请求体示例：
 
@@ -89,8 +111,17 @@ Swagger「维护」分组：
 
 练习时可把 `RetentionDays` 临时改成 `0` 或 `1` 再点归档，观察数据从 `TrackRecords` 挪到 `TrackRecordArchives`。
 
+## 自动化测试
+
+```bash
+dotnet test
+```
+
+覆盖：空条码、工位不存在、重复进站、未进站出站、正常进出站、重复工位码。测试用 EF InMemory，不依赖 SQL Server。
+
 ## 建议你接着改
 
-- Web 上新增工位
-- 今日进站数看板
-- 重复进站/未进站出站的拒绝用例自动化测试
+- 按 [docs/manual-mapping.md](docs/manual-mapping.md) 勾一遍进站/出站六拍
+- 在真仓库搜 `OnlineRequest`，对照 `DaqWorker`
+- 提交并推送到 GitHub
+- 真 OPC UA（可选，需仿真器如 Prosys）
