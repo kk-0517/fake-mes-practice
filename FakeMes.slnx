@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FakeMes.Api/FakeMes.Api.csproj" />
+    <Project Path="src/FakeMes.Simulator/FakeMes.Simulator.csproj" />
+  </Folder>
+</Solution>
