@@ -1,3 +1,5 @@
+using FakeMes.Domain.Repositories;
+using FakeMes.EntityFrameworkCore.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,6 +13,12 @@ public static class FakeMesEntityFrameworkCoreModule
     {
         services.AddDbContext<FakeMesDbContext>(options =>
             options.UseSqlServer(connectionString));
+
+        services.AddScoped<IStationRepository, EfStationRepository>();
+        services.AddScoped<ITrackRecordRepository, EfTrackRecordRepository>();
+        services.AddScoped<IMaintenanceLogRepository, EfMaintenanceLogRepository>();
+        services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+
         return services;
     }
 }

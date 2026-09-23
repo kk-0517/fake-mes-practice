@@ -3,7 +3,6 @@
   <ItemGroup>
     <ProjectReference Include="..\FakeMes.Application.Contracts\FakeMes.Application.Contracts.csproj" />
     <ProjectReference Include="..\FakeMes.Domain\FakeMes.Domain.csproj" />
-    <ProjectReference Include="..\FakeMes.EntityFrameworkCore\FakeMes.EntityFrameworkCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

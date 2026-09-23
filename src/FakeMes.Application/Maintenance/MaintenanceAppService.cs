@@ -1,28 +1,24 @@
 using FakeMes.Application.Contracts.Maintenance;
 using FakeMes.Domain.Maintenance;
-using FakeMes.Domain.Shared;
-using FakeMes.Domain.Tracking;
-using FakeMes.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
+using FakeMes.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace FakeMes.Application.Maintenance;
 
 public class MaintenanceAppService(
-    FakeMesDbContext db,
+    ITrackRecordRepository tracks,
+    IMaintenanceLogRepository logs,
+    IUnitOfWork uow,
     IOptions<MaintenanceOptions> options,
     ILogger<MaintenanceAppService> logger) : IMaintenanceAppService
 {
     public async Task<MaintenanceStatusDto> GetStatusAsync(CancellationToken ct = default)
     {
         var opt = options.Value;
-        var hotCount = await db.TrackRecords.CountAsync(ct);
-        var archiveCount = await db.TrackRecordArchives.CountAsync(ct);
-        var last = await db.MaintenanceLogs
-            .AsNoTracking()
-            .OrderByDescending(x => x.Id)
-            .FirstOrDefaultAsync(ct);
+        var hotCount = await tracks.CountHotAsync(ct);
+        var archiveCount = await tracks.CountArchiveAsync(ct);
+        var last = await logs.GetLatestAsync(ct);
 
         return new MaintenanceStatusDto(
             opt.Enabled,
@@ -42,47 +38,19 @@ public class MaintenanceAppService(
         var batchSize = Math.Clamp(opt.BatchSize, 100, 10000);
         var cutoff = DateTime.Now.AddDays(-retentionDays);
 
-        var openInIds = (await db.TrackRecords
-                .AsNoTracking()
-                .GroupBy(x => new { x.StationCode, x.Barcode })
-                .Select(g => new
-                {
-                    Id = g.OrderByDescending(x => x.Time).ThenByDescending(x => x.Id).Select(x => x.Id).First(),
-                    Type = g.OrderByDescending(x => x.Time).ThenByDescending(x => x.Id).Select(x => x.Type).First()
-                })
-                .ToListAsync(ct))
-            .Where(x => x.Type == TrackType.In)
-            .Select(x => x.Id)
-            .ToHashSet();
-
+        var openInIds = (await tracks.GetOpenInRecordIdsAsync(ct)).ToHashSet();
         var totalArchived = 0;
 
         while (true)
         {
             ct.ThrowIfCancellationRequested();
 
-            var batch = await db.TrackRecords
-                .Where(x => x.Time < cutoff && !openInIds.Contains(x.Id))
-                .OrderBy(x => x.Time)
-                .ThenBy(x => x.Id)
-                .Take(batchSize)
-                .ToListAsync(ct);
-
+            var batch = await tracks.TakeExpiredExcludingAsync(cutoff, openInIds, batchSize, ct);
             if (batch.Count == 0)
                 break;
 
-            var archivedAt = DateTime.Now;
-            db.TrackRecordArchives.AddRange(batch.Select(x => new TrackRecordArchive
-            {
-                OriginalId = x.Id,
-                StationCode = x.StationCode,
-                Barcode = x.Barcode,
-                Type = x.Type,
-                Time = x.Time,
-                ArchivedAt = archivedAt
-            }));
-            db.TrackRecords.RemoveRange(batch);
-            await db.SaveChangesAsync(ct);
+            await tracks.MoveToArchiveAsync(batch, DateTime.Now, ct);
+            await uow.SaveChangesAsync(ct);
 
             totalArchived += batch.Count;
             logger.LogInformation("Maintenance archived {Count} records (cutoff {Cutoff:u})", batch.Count, cutoff);
@@ -93,7 +61,7 @@ public class MaintenanceAppService(
             ? $"无需归档（保留 {retentionDays} 天，截止 {cutoff:yyyy-MM-dd HH:mm}）"
             : $"已归档 {totalArchived} 条到 TrackRecordArchives（保留 {retentionDays} 天）";
 
-        db.MaintenanceLogs.Add(new MaintenanceLog
+        await logs.AddAsync(new MaintenanceLog
         {
             StartedAt = started,
             FinishedAt = finished,
@@ -101,8 +69,8 @@ public class MaintenanceAppService(
             ArchivedCount = totalArchived,
             DeletedFromHotCount = totalArchived,
             Message = message
-        });
-        await db.SaveChangesAsync(ct);
+        }, ct);
+        await uow.SaveChangesAsync(ct);
 
         return new MaintenanceRunResultDto(started, finished, trigger, totalArchived, cutoff, message);
     }

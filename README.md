@@ -16,10 +16,10 @@ FakeMes.Web（Vue 追溯页）
 | 项目 | 职责 |
 |------|------|
 | `FakeMes.Domain.Shared` | 枚举等共享类型 |
-| `FakeMes.Domain` | 实体 |
+| `FakeMes.Domain` | 实体、仓储接口 |
 | `FakeMes.Application.Contracts` | DTO、应用服务接口 |
-| `FakeMes.Application` | 应用服务、后台维护任务 |
-| `FakeMes.EntityFrameworkCore` | DbContext、建表引导 |
+| `FakeMes.Application` | 应用服务（只依赖仓储接口）、后台维护任务 |
+| `FakeMes.EntityFrameworkCore` | DbContext、仓储实现 |
 | `FakeMes.HttpApi` | Controllers |
 | `FakeMes.HttpApi.Host` | 可运行宿主 |
 

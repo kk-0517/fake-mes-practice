@@ -3,6 +3,7 @@ using FakeMes.Application.Contracts.Stations;
 using FakeMes.Application.Stations;
 using FakeMes.Domain.Stations;
 using FakeMes.EntityFrameworkCore;
+using FakeMes.EntityFrameworkCore.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace FakeMes.Application.Tests;
@@ -21,7 +22,11 @@ public class StationAppServiceTests : IDisposable
         _db = new FakeMesDbContext(options);
         _db.Stations.Add(new Station { Code = "OP10", Name = "组装工位" });
         _db.SaveChanges();
-        _sut = new StationAppService(_db);
+
+        _sut = new StationAppService(
+            new EfStationRepository(_db),
+            new EfTrackRecordRepository(_db),
+            new EfUnitOfWork(_db));
     }
 
     public void Dispose() => _db.Dispose();
