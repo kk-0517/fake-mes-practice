@@ -32,7 +32,7 @@ try
 catch (Exception ex)
 {
     Console.WriteLine($"无法拉取工位列表: {ex.Message}");
-    Console.WriteLine("请先启动 FakeMes.Api，再重新运行 Simulator。");
+    Console.WriteLine("请先启动 FakeMes.HttpApi.Host，再重新运行 Simulator。");
     return;
 }
 

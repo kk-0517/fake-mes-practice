@@ -10,7 +10,7 @@
 | 现场（手册） | FakeMes |
 |--------------|---------|
 | `Nio.Xpu.Lmes.Web` | `FakeMes.Web`（看板 + 追溯 + 新增工位） |
-| `apis/daq` + `modules/mam` | `FakeMes.Api`（`/api/daq/*` + `StationService`） |
+| `apis/daq` + `modules/mam` | `FakeMes.HttpApi` + `StationAppService`（`/api/daq/*`） |
 | `LMES.DC.MesCoreServer` 数采 | `DaqWorker`（轮询假 PLC） |
 | PLC + OPC UA `opc.tcp:4840` | `FakePlc`（内存信号，无真 OPC） |
 

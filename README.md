@@ -1,27 +1,40 @@
 # FakeMes Practice（.NET + Vue）
 
-无真实 PLC/设备的 **进站 → 出站 → 网页追溯** 练手项目。
+无真实 PLC/设备的 **进站 → 出站 → 网页追溯** 练手项目。  
+后端按 **DDD / ABP 约定**拆项目（未引入 Volo.Abp 包，保留分层习惯）。
 
 ```text
 FakeMes.Simulator（假 PLC + 假数采握手）
         ↓ HTTP
-FakeMes.Api（.NET + SQL Server LocalDB）
+FakeMes.HttpApi.Host（宿主：Swagger / 配置 / 启动）
+  ← HttpApi ← Application ← Domain
+  ← EntityFrameworkCore ← Domain
         ↑
 FakeMes.Web（Vue 追溯页）
 ```
+
+| 项目 | 职责 |
+|------|------|
+| `FakeMes.Domain.Shared` | 枚举等共享类型 |
+| `FakeMes.Domain` | 实体 |
+| `FakeMes.Application.Contracts` | DTO、应用服务接口 |
+| `FakeMes.Application` | 应用服务、后台维护任务 |
+| `FakeMes.EntityFrameworkCore` | DbContext、建表引导 |
+| `FakeMes.HttpApi` | Controllers |
+| `FakeMes.HttpApi.Host` | 可运行宿主 |
 
 ## 环境
 
 - .NET 10 SDK（本机已验证）
 - Node.js 16+（前端用 Vite 4）
-- SQL Server LocalDB（本机已有 `MSSQLLocalDB`；连接串在 `src/FakeMes.Api/appsettings.json`）
+- SQL Server LocalDB（本机已有 `MSSQLLocalDB`；连接串在 `src/FakeMes.HttpApi.Host/appsettings.json`）
 
 ## 启动顺序（三个终端）
 
 ### 1. 后端 API
 
 ```bash
-cd src/FakeMes.Api
+cd src/FakeMes.HttpApi.Host
 dotnet run --launch-profile http
 ```
 
@@ -95,7 +108,7 @@ npm run dev
 
 热库 `TrackRecords` 只保留近期数据；超过保留期的记录归档到 `TrackRecordArchives`（追溯仍可查）。
 
-配置见 `src/FakeMes.Api/appsettings.json` → `Maintenance`：
+配置见 `src/FakeMes.HttpApi.Host/appsettings.json` → `Maintenance`：
 
 | 项 | 含义 | 默认 |
 |----|------|------|

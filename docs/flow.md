@@ -6,7 +6,7 @@
         ↓ 数采轮询（DaqWorker）
 【假数采】发现请求 → POST API → 写回 Allow / NotAllow
         ↓ HTTP
-【后端】FakeMes.Api（校验 + 落库）
+【后端】FakeMes.HttpApi.Host（校验 + 落库）
         ↑
 【前端】FakeMes.Web（看板 / 追溯）
 ```

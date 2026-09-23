@@ -1,9 +1,15 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/FakeMes.Api/FakeMes.Api.csproj" />
+    <Project Path="src/FakeMes.Domain.Shared/FakeMes.Domain.Shared.csproj" />
+    <Project Path="src/FakeMes.Domain/FakeMes.Domain.csproj" />
+    <Project Path="src/FakeMes.Application.Contracts/FakeMes.Application.Contracts.csproj" />
+    <Project Path="src/FakeMes.Application/FakeMes.Application.csproj" />
+    <Project Path="src/FakeMes.EntityFrameworkCore/FakeMes.EntityFrameworkCore.csproj" />
+    <Project Path="src/FakeMes.HttpApi/FakeMes.HttpApi.csproj" />
+    <Project Path="src/FakeMes.HttpApi.Host/FakeMes.HttpApi.Host.csproj" />
     <Project Path="src/FakeMes.Simulator/FakeMes.Simulator.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/FakeMes.Api.Tests/FakeMes.Api.Tests.csproj" />
+    <Project Path="tests/FakeMes.Application.Tests/FakeMes.Application.Tests.csproj" />
   </Folder>
 </Solution>
